@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Amazon Review Analysis - 2026/08/13</title>
+<style>
+  :root {
+    --page: #f3f4f8;
+    --card: #ffffff;
+    --ink: #1f2329;
+    --muted: #6b7280;
+    --line: #e8eaef;
+    --blue: #3b82f6;
+    --orange: #f97316;
+    --violet: #8b5cf6;
+    --green: #22c55e;
+    --sky: #0ea5e9;
+    --amber: #f59e0b;
+    --star: #f59e0b;
+    --navy: #1f2937;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Microsoft YaHei", ui-sans-serif, system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 24px 20px 80px; }
+  .page-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 20px;
+    padding: 4px 2px 16px;
+    border-bottom: 1px solid #e8eaed;
+  }
+  .page-kicker {
+    margin: 0 0 6px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: #c2410c;
+  }
+  .page-title {
+    margin: 0;
+    font-size: 26px;
+    font-weight: 650;
+    letter-spacing: -.03em;
+    color: #111827;
+    line-height: 1.15;
+  }
+  .page-date {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 12px;
+    border-radius: 999px;
+    background: #fff;
+    border: 1px solid #ece4dc;
+    color: #6b645b;
+    font-size: 13px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .page-date i {
+    width: 7px; height: 7px; border-radius: 99px;
+    background: #fb923c; display: inline-block;
+  }
+  @media (max-width: 860px) {
+    .page-head { flex-wrap: wrap; align-items: flex-start; }
+  }
+
+  .hero {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 20px;
+    align-items: center;
+    background: linear-gradient(90deg, #fff6ef 0%, #ffe9d8 55%, #fff3ea 100%);
+    border-radius: 16px;
+    padding: 22px 26px;
+    border: 1px solid #ffd8bc;
+  }
+  .hero-title { display: flex; align-items: center; gap: 8px; font-size: 16px; font-weight: 650; margin: 0 0 8px; }
+  .bolt {
+    width: 22px; height: 22px; border-radius: 999px; background: #ff7a3a; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 12px;
+  }
+  .hero p { margin: 0 0 12px; color: #3f3a36; font-size: 13.5px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    background: #fff; color: #7c3aed; border: 1px solid #eadbff;
+    border-radius: 999px; padding: 4px 11px; font-size: 12px; cursor: pointer;
+    transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .chip.neg { color: #c2410c; border-color: #ffd4b8; }
+  .chip:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,.06); }
+
+  .score-box { padding: 4px 0 4px 12px; }
+  .score-row { display: flex; align-items: center; gap: 14px; }
+  .gauge { position: relative; width: 92px; height: 92px; flex: 0 0 92px; }
+  .gauge svg { transform: rotate(-90deg); }
+  .gauge-center {
+    position: absolute; inset: 0; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; font-weight: 700;
+  }
+  .gauge-center b { font-size: 22px; line-height: 1; }
+  .gauge-center span { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .stars { color: var(--star); font-size: 12px; letter-spacing: 1px; margin-bottom: 4px; }
+  .bars { flex: 1; min-width: 0; }
+  .bar-row { display: grid; grid-template-columns: 18px 1fr 32px; gap: 6px; align-items: center; margin: 3px 0; font-size: 11px; color: var(--muted); }
+  .track { height: 6px; background: #f3e6dc; border-radius: 99px; overflow: hidden; }
+  .fill { height: 100%; border-radius: 99px; background: #fb923c; }
+  .fill.s5 { width: 52%; } .fill.s4 { width: 22%; } .fill.s3 { width: 7%; } .fill.s2 { width: 5%; } .fill.s1 { width: 14%; }
+  .note { margin: 8px 0 0; font-size: 11px; color: #9a8476; }
+
+  .section-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    margin: 28px 4px 14px; padding-bottom: 10px; border-bottom: 1px solid var(--line);
+    font-size: 15px; font-weight: 650;
+  }
+  .section-head .left { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
+  .section-head .hint { font-size: 12px; color: var(--muted); font-weight: 400; }
+
+  .cards { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px; min-height: 168px; cursor: pointer;
+    display: flex; flex-direction: column;
+    transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 10px 24px rgba(31,41,55,.08); border-color: #d7dce5; }
+  .card h3 { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 14px; }
+  .card .more { margin-top: 14px; font-size: 12px; color: var(--blue); align-self: flex-start; }
+  .ico {
+    width: 22px; height: 22px; border-radius: 999px; color: #fff;
+    display: inline-flex; align-items: center; justify-content: center; font-size: 12px; flex: 0 0 22px;
+  }
+  .ico.blue { background: #3b82f6; } .ico.orange { background: #f97316; }
+  .ico.violet { background: #8b5cf6; } .ico.green { background: #22c55e; }
+  .ico.sky { background: #0ea5e9; } .ico.amber { background: #f59e0b; }
+  .card p { margin: 0; color: #4b5563; font-size: 13px; flex: 1; }
+
+  .toolbar { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+  .toolbar button {
+    appearance: none; border: 1px solid #e5e7eb; background: #fff;
+    border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 12px;
+    color: var(--ink); cursor: pointer;
+  }
+  .toolbar button:hover { border-color: #c5cad3; }
+  .toolbar button.on { background: #111827; color: #fff; border-color: #111827; }
+
+  .sec {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    margin-bottom: 10px; overflow: hidden;
+  }
+  .sec-h, .l1-h, .l2-h {
+    width: 100%; text-align: left; appearance: none; border: 0; background: none;
+    font: inherit; cursor: pointer; display: flex; align-items: center; gap: 10px;
+  }
+  .sec-h { padding: 16px 18px; font-size: 16px; font-weight: 700; }
+  .sec-h:hover, .l1-h:hover, .l2-h:hover { background: #fafbfc; }
+  .chev {
+    width: 18px; height: 18px; border-radius: 5px; background: #f3f4f6;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #6b7280; transition: transform .18s ease; flex: 0 0 18px;
+  }
+  .open > .sec-h .chev, .open > .l1-h .chev, .open > .l2-h .chev { transform: rotate(90deg); }
+  .no { color: #9ca3af; font-variant-numeric: tabular-nums; }
+  .badge {
+    margin-left: auto; background: #f3f4f6; color: #4b5563;
+    border-radius: 999px; padding: 1px 8px; font-size: 11px; font-weight: 600;
+  }
+  .sec-b, .l1-b, .l2-b { display: none; }
+  .open > .sec-b, .open > .l1-b, .open > .l2-b { display: block; }
+  .sec-b { padding: 0 18px 16px; border-top: 1px solid #f3f4f6; }
+  .lead { color: var(--muted); font-size: 13px; margin: 12px 0 10px; }
+
+  .l1 { border: 1px solid #eef0f4; border-radius: 10px; margin: 8px 0; overflow: hidden; }
+  .l1-h { padding: 11px 12px; font-weight: 650; font-size: 14px; }
+  .l1-b { padding: 0 10px 10px; background: #fbfcfd; }
+  .dot { width: 8px; height: 8px; border-radius: 99px; flex: 0 0 8px; background: #22c55e; }
+  .dot.neg { background: #ef4444; }
+  .pol { font-size: 11px; color: #16a34a; font-weight: 600; }
+  .pol.neg { color: #dc2626; }
+
+  .l2 { background: #fff; border: 1px solid #eef0f4; border-radius: 10px; margin: 8px 0 0; }
+  .l2-h { padding: 10px 12px; font-size: 13.5px; font-weight: 650; }
+  .l2-b { padding: 0 14px 12px; }
+  .desc { margin: 0 0 8px; color: #6b7280; font-size: 13px; }
+  .quotes { margin: 0; padding-left: 18px; }
+  .quotes li { color: #374151; font-size: 13px; margin: 6px 0; }
+  .quotes li::marker { color: #d1d5db; }
+  .q-en { display: block; }
+  .q-cn { display: none; margin-top: 4px; color: #6b7280; font-size: 12.5px; }
+  html.show-cn .q-cn { display: block; }
+  .l3-name { font-size: 12px; font-weight: 650; color: #2563eb; margin: 10px 0 4px; }
+
+  .prop {
+    display: inline-block; margin: 0 0 8px; padding: 4px 8px;
+    background: #fff7ed; color: #c2410c; border-radius: 6px; font-size: 12px;
+  }
+  .action { margin: 0; padding-left: 18px; }
+  .action li { color: #374151; font-size: 13px; margin: 6px 0; }
+  .act { margin: 0 0 12px; }
+  .act-t { margin: 0 0 6px; font-size: 13.5px; font-weight: 600; color: #1f2937; }
+  .act .quotes { padding-left: 16px; }
+  .dash { display: flex; flex-direction: column; gap: 12px; }
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi {
+    background: #fff; border: 1px solid #e8eaed; border-radius: 12px;
+    padding: 16px 18px;
+  }
+  .kpi .k { font-size: 12px; color: #8b919a; letter-spacing: .02em; }
+  .kpi .v { margin-top: 6px; font-size: 26px; font-weight: 650; letter-spacing: -.03em; line-height: 1.15; }
+  .kpi .s { margin-top: 4px; font-size: 12px; color: #9aa1ab; }
+  .dash-row { display: grid; gap: 12px; }
+  .dash-row.cols-3 { grid-template-columns: 1.1fr 1fr 1fr; }
+  .dash-row.cols-2 { grid-template-columns: 1fr 1fr; }
+  .dash-card {
+    background: #fff; border: 1px solid #e8eaed; border-radius: 12px;
+    padding: 14px 16px 8px;
+  }
+  .dash-h { font-size: 13px; font-weight: 650; color: #111827; margin: 0 0 2px; }
+  .dash-sub { font-size: 12px; color: #8b919a; margin: 0 0 8px; }
+  .chart { width: 100%; }
+  table.note {
+    width: 100%; border-collapse: collapse; font-size: 12.5px; margin: 4px 0 10px;
+  }
+  table.note th, table.note td { text-align: left; padding: 7px 8px; border-bottom: 1px solid #f1f3f5; vertical-align: top; }
+  table.note th { color: #8b919a; font-weight: 600; font-size: 11px; }
+  table.note td:first-child { font-variant-numeric: tabular-nums; color: #6b7280; white-space: nowrap; }
+
+  @media (max-width: 860px) {
+    .hero { grid-template-columns: 1fr; }
+    .cards { grid-template-columns: 1fr; }
+    .section-head { flex-wrap: wrap; }
+    .toolbar { width: 100%; justify-content: flex-end; }
+    .kpi-row, .dash-row.cols-3, .dash-row.cols-2 { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page-head">
+    <div>
+      <p class="page-kicker" id="page-kicker"></p>
+      <h1 class="page-title" id="page-title">Amazon Review Analysis</h1>
+    </div>
+    <div class="page-date" id="page-date"><i></i></div>
+  </header>
+  <section class="hero">
+    <div>
+      <h1 class="hero-title"><span class="bolt">⚡</span>买家口碑速读</h1>
+      <p>买家普遍认可免布线建图和日常自动割草能省下每周维护时间，切到的地方效果也不错；但贴边仍常需人工补刀，复杂地形易卡顿，装机调通和续航也不如预期。</p>
+      <div class="chips">
+        <button type="button" class="chip" data-jump="s01" data-l1="无边界/免布线省事">免布线省事</button>
+        <button type="button" class="chip" data-jump="s01" data-l1="使用省心">节省时间</button>
+        <button type="button" class="chip neg" data-jump="s02" data-l1="导航定位差">复杂地形易卡顿</button>
+        <button type="button" class="chip neg" data-jump="s02" data-l1="贴边修剪差">贴边仍需补刀</button>
+        <button type="button" class="chip neg" data-jump="s02" data-l1="安装设置差">装机调通成本</button>
+      </div>
+    </div>
+    <div class="score-box">
+      <div class="score-row">
+        <div class="gauge">
+          <svg width="92" height="92" viewBox="0 0 92 92">
+            <circle cx="46" cy="46" r="38" fill="none" stroke="#f3e1d4" stroke-width="8"/>
+            <circle cx="46" cy="46" r="38" fill="none" stroke="#fb923c" stroke-width="8"
+              stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="52.53"/>
+          </svg>
+          <div class="gauge-center"><b>3.9</b><span>/ 5</span></div>
+        </div>
+        <div class="bars">
+          <div class="stars">★★★★☆ 综合评论</div>
+          <div class="bar-row"><span>5</span><div class="track"><div class="fill s5"></div></div><span>52%</span></div>
+          <div class="bar-row"><span>4</span><div class="track"><div class="fill s4"></div></div><span>22%</span></div>
+          <div class="bar-row"><span>3</span><div class="track"><div class="fill s3"></div></div><span>7%</span></div>
+          <div class="bar-row"><span>2</span><div class="track"><div class="fill s2"></div></div><span>5%</span></div>
+          <div class="bar-row"><span>1</span><div class="track"><div class="fill s1"></div></div><span>14%</span></div>
+        </div>
+      </div>
+      <p class="note">综合评分 · 10 ASIN / 956 条整机样本，非全类目普查</p>
+    </div>
+  </section>
+
+  <h2 class="section-head"><span class="left">评论总结 <span class="hint">点卡片会跳到对应详细分析</span></span></h2>
+  <div class="cards">
+    <article class="card" data-jump="s01">
+      <h3><span class="ico blue">👍</span>好评亮点</h3>
+      <p>买家真正买单的是「调通之后，该割的地方能割好」。378 条写真正切到的地方效果不错，319 条觉得初次安装/建图不算难，275 条强调省心。171 条称赞避障和地面通过性，92 条把免布线当成核心收益。贴边好评只有 63 条，还没有成为稳卖点。</p>
+      <div class="more">买家喜欢什么 →</div>
+    </article>
+    <article class="card" data-jump="s02">
+      <h3><span class="ico orange">💬</span>差评痛点</h3>
+      <p>最大桶是导航定位（243 条）：坑洼卡住 65、上坡打滑 49、丢定位打转 40。其次是安装 203 条。单一二级最高差评是「贴边留边，仍需人工补刀」（106）。混合评论占 48%，很多人不是全盘否定，而是救援和补边太多。</p>
+      <div class="more">差评主要抱怨什么 →</div>
+    </article>
+    <article class="card" data-jump="s03">
+      <h3><span class="ico violet">✨</span>买家期待</h3>
+      <p>要一台免布线、一次建图就能长期自己跑的机器。贴边要真贴到围栏和花坛。坑、坡、湿草上少救援。续航按宣传面积跑完。售后要打得通，配件要买得到。</p>
+      <div class="more">买家希望哪里更好 →</div>
+    </article>
+    <article class="card" data-jump="s04">
+      <h3><span class="ico green">👤</span>人群画像</h3>
+      <p>不想每周推草的有房家庭，以及愿意花几个晚上调地图的科技用户。混合评论近一半：能容忍学习成本，不能容忍长期人肉运维。ANTHBOT 走入门无线 RTK，ECOVACS / NAVIMOW / Mammotion 走品牌溢价。</p>
+      <div class="more">哪些人群更适合 →</div>
+    </article>
+    <article class="card" data-jump="s05">
+      <h3><span class="ico sky">📍</span>使用场景</h3>
+      <p>更合适：1/8–1/2 acre 中小院，平地或缓坡，障碍可控，充电座开阔。不适合：按宣传亩数买小电池机、陡坡湿草坑洼、大树挡 RTK、必须贴边到围栏、不愿自己排障。</p>
+      <div class="more">哪些情况不适合 →</div>
+    </article>
+    <article class="card" data-jump="s06">
+      <h3><span class="ico amber">🛒</span>购买理由</h3>
+      <p>第一动力是替代每周人工或雇人。第二是免布线比埋线省事。入门价尝鲜无线 RTK，旗舰价买 LiDAR、贴边和越野。大量 4 星的潜台词：这个省事值这个价，但还没到完全不用管。</p>
+      <div class="more">值不值这个价 →</div>
+    </article>
+  </div>
+
+  <h2 class="section-head" id="detail-head">
+    <span class="left">详细分析 <span class="hint">点 01–07，再点一级分类</span></span>
+    <span class="toolbar">
+      <button type="button" id="btn-translate">翻译</button>
+      <button type="button" id="expand-all">全部展开</button>
+      <button type="button" id="collapse-all">全部收起</button>
+    </span>
+  </h2>
+  <div id="detail-root"></div>
+
+  <h2 class="section-head" id="source-head">
+    <span class="left">整体分析 <span class="hint">评分、产品、类型、内容形态、国家与时间趋势</span></span>
+  </h2>
+  <div id="source-root"></div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<script>window.echarts || document.write('<script src="https://fastly.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"><\/script>');</script>
+<script src="board-data.js"></script>
+<script>
+(function applyMeta() {
+  const m = window.PAGE_META || {};
+  const kicker = [m.category, m.marketplace].filter(Boolean).join(" · ");
+  const kEl = document.getElementById("page-kicker");
+  const tEl = document.getElementById("page-title");
+  const dEl = document.getElementById("page-date");
+  if (kEl && kicker) kEl.textContent = kicker;
+  if (tEl && m.title) tEl.textContent = m.title;
+  if (dEl && m.date) dEl.innerHTML = "<i></i>" + m.date;
+  if (m.title) document.title = m.date ? m.title + " - " + m.date : m.title;
+})();
+</script>
+<script>
+(function () {
+  const root = document.getElementById("detail-root");
+  const data = window.BOARD_DATA || [];
+  const byN = (a, b) => (b.n || 0) - (a.n || 0);
+
+  const esc = (s) => String(s || "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+  function normQuote(q) {
+    if (!q) return { en: "", cn: "" };
+    if (typeof q === "string") return { en: q, cn: q };
+    return { en: q.en || "", cn: q.cn || q.en || "" };
+  }
+
+  function quotes(list) {
+    if (!list || !list.length) return "";
+    return `<ul class="quotes">${list.map((raw) => {
+      const q = normQuote(raw);
+      return `<li>
+        <span class="q-en">${esc(q.en)}</span>
+        <span class="q-cn">${esc(q.cn || q.en)}</span>
+      </li>`;
+    }).join("")}</ul>`;
+  }
+
+  function l2html(l2) {
+    const l3s = (l2.l3 || []).slice().sort(byN);
+    const l3 = l3s.map((n) => `
+      <div class="l3-name">${esc(n.name)} · ${n.n}</div>
+      ${quotes(n.excerpts)}
+    `).join("");
+    return `
+      <div class="l2" data-l2="${esc(l2.name)}">
+        <button type="button" class="l2-h">
+          <span class="chev">▶</span>
+          <span>${esc(l2.name)}</span>
+          <span class="badge">${l2.n}</span>
+        </button>
+        <div class="l2-b">
+          <p class="desc">${esc(l2.desc || "")}</p>
+          ${quotes(l2.excerpts)}
+          ${l3}
+        </div>
+      </div>`;
+  }
+
+  function l1html(l1) {
+    const neg = l1.polarity === "差评";
+    const l2s = (l1.l2 || []).slice().sort(byN);
+    return `
+      <div class="l1" data-l1="${esc(l1.name)}">
+        <button type="button" class="l1-h">
+          <span class="chev">▶</span>
+          <span class="dot${neg ? " neg" : ""}"></span>
+          <span class="pol${neg ? " neg" : ""}">${esc(l1.polarity)}</span>
+          <span>${esc(l1.name)}</span>
+          <span class="badge">${l1.n}</span>
+        </button>
+        <div class="l1-b">${l2s.map(l2html).join("")}</div>
+      </div>`;
+  }
+
+  root.innerHTML = data.map((sec) => {
+    const l1s = (sec.l1 || []).slice().sort(byN);
+    return `
+    <section class="sec" id="${esc(sec.id)}">
+      <button type="button" class="sec-h">
+        <span class="chev">▶</span>
+        <span class="no">${esc(sec.no)}</span>
+        <span>${esc(sec.title)}</span>
+        <span class="badge">${l1s.length} 个一级</span>
+      </button>
+      <div class="sec-b">
+        <p class="lead">${esc(sec.lead || "")}</p>
+        ${l1s.map(l1html).join("")}
+      </div>
+    </section>`;
+  }).join("");
+
+  function actionPoints(list) {
+    if (!list || !list.length) return "";
+    return list.map((it) => {
+      const text = typeof it === "string" ? it : (it.text || "");
+      const qs = typeof it === "string" ? [] : (it.excerpts || []);
+      return `<div class="act">
+        <p class="act-t">${esc(text)}</p>
+        ${qs.length ? quotes(qs) : ""}
+      </div>`;
+    }).join("");
+  }
+
+  function painHtml(p) {
+    return `
+      <div class="l1" data-l1="${esc(p.name)}">
+        <button type="button" class="l1-h">
+          <span class="chev">▶</span>
+          <span class="dot neg"></span>
+          <span class="pol neg">差评</span>
+          <span>${esc(p.name)}</span>
+          <span class="badge">${p.n}</span>
+        </button>
+        <div class="l1-b">
+          <div class="l2">
+            <button type="button" class="l2-h">
+              <span class="chev">▶</span>
+              <span>改进思路</span>
+            </button>
+            <div class="l2-b">${actionPoints(p.improve)}</div>
+          </div>
+          <div class="l2">
+            <button type="button" class="l2-h">
+              <span class="chev">▶</span>
+              <span>新品方向</span>
+            </button>
+            <div class="l2-b">${actionPoints(p.product)}</div>
+          </div>
+        </div>
+      </div>`;
+  }
+
+  const pains = ((window.DIRECTION_DATA || {}).pains || []).slice().sort(byN);
+  root.insertAdjacentHTML("beforeend", `
+    <section class="sec" id="s07">
+      <button type="button" class="sec-h">
+        <span class="chev">▶</span>
+        <span class="no">07</span>
+        <span>改进思路 &amp; 新品方向</span>
+        <span class="badge">${pains.length} 个方向切入</span>
+      </button>
+      <div class="sec-b">
+        <p class="lead">二级仍是差评（按频次降序）。再点开才是行动：改进现有产品，或做新品。</p>
+        ${pains.map(painHtml).join("")}
+      </div>
+    </section>`);
+
+  function toggle(el, cls) {
+    el.classList.toggle(cls || "open");
+  }
+
+  root.addEventListener("click", (e) => {
+    const btn = e.target.closest(".sec-h, .l1-h, .l2-h");
+    if (!btn) return;
+    toggle(btn.parentElement);
+  });
+
+  function closeAll() {
+    root.querySelectorAll(".sec, .l1, .l2").forEach((n) => n.classList.remove("open"));
+  }
+  function openAll() {
+    root.querySelectorAll(".sec, .l1, .l2").forEach((n) => n.classList.add("open"));
+  }
+  document.getElementById("expand-all").onclick = openAll;
+  document.getElementById("collapse-all").onclick = closeAll;
+
+  const btnTr = document.getElementById("btn-translate");
+  btnTr.onclick = () => {
+    const on = document.documentElement.classList.toggle("show-cn");
+    btnTr.classList.toggle("on", on);
+    btnTr.textContent = on ? "原文" : "翻译";
+  };
+
+  function jump(secId, l1Name) {
+    const sec = document.getElementById(secId);
+    if (!sec) return;
+    closeAll();
+    sec.classList.add("open");
+    if (l1Name) {
+      const l1 = [...sec.querySelectorAll(".l1")].find((n) => n.dataset.l1 === l1Name);
+      if (l1) {
+        l1.classList.add("open");
+        const first = l1.querySelector(".l2");
+        if (first) first.classList.add("open");
+      }
+    }
+    sec.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  document.querySelectorAll("[data-jump]").forEach((el) => {
+    el.addEventListener("click", () => jump(el.dataset.jump, el.dataset.l1 || ""));
+  });
+
+  const first = root.querySelector(".sec");
+  if (first) first.classList.add("open");
+
+  const src = window.SOURCE_DATA || {};
+  const srcRoot = document.getElementById("source-root");
+  const STAR_COLORS = { 5: "#10b981", 4: "#3b82f6", 3: "#f59e0b", 2: "#f97316", 1: "#ef4444" };
+  const AXIS = { color: "#9aa1ab", fontSize: 11 };
+  const GRID = { left: 8, right: 16, top: 36, bottom: 8, containLabel: true };
+  const TIP = {
+    backgroundColor: "rgba(17,24,39,.92)",
+    borderWidth: 0,
+    textStyle: { color: "#fff", fontSize: 12 },
+    extraCssText: "border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);",
+  };
+
+  srcRoot.innerHTML = `
+    <div class="dash">
+      <div class="kpi-row">
+        <div class="kpi"><div class="k">样本量</div><div class="v">${src.n || 0}</div><div class="s">主分析整机评论</div></div>
+        <div class="kpi"><div class="k">加权均分</div><div class="v">${src.rating || "—"}</div><div class="s">按 1–5 星加权</div></div>
+        <div class="kpi"><div class="k">有赞同</div><div class="v">${src.helpful || 0}</div><div class="s">赞同数 &gt; 0</div></div>
+        <div class="kpi"><div class="k">VP / Vine</div><div class="v">${src.vp || 0}<span style="font-size:16px;color:#9aa1ab;font-weight:500"> / ${src.vine || 0}</span></div><div class="s">激励评论占比偏高</div></div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-h">时间趋势</div>
+        <div class="dash-sub">横轴月份 · 纵轴评论数 · 堆叠为 1–5 星，可点图例筛选</div>
+        <div class="chart" id="c-time" style="height:340px"></div>
+      </div>
+      <div class="dash-row cols-3">
+        <div class="dash-card">
+          <div class="dash-h">星级结构</div>
+          <div class="dash-sub">中心为加权均分</div>
+          <div class="chart" id="c-star" style="height:260px"></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-h">情感结构</div>
+          <div class="dash-sub">按标注 sentiment_mix</div>
+          <div class="chart" id="c-mix" style="height:260px"></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-h">类型与内容形态</div>
+          <div class="dash-sub">VP / Vine / 图 / 视频 / 纯文本</div>
+          <div class="chart" id="c-type" style="height:260px"></div>
+        </div>
+      </div>
+      <div class="dash-row cols-2">
+        <div class="dash-card">
+          <div class="dash-h">品牌样本量</div>
+          <div class="dash-sub">仅本批 10 个 ASIN，非全类目</div>
+          <div class="chart" id="c-brand" style="height:260px"></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-h">国家分布</div>
+          <div class="dash-sub">非美评论主要来自 ANTHBOT 导出混入</div>
+          <div class="chart" id="c-country" style="height:260px"></div>
+        </div>
+      </div>
+      <div class="dash-card">
+        <div class="dash-h">ASIN 样本量</div>
+        <div class="dash-sub">条数降序；下表为一句话把脉</div>
+        <div class="chart" id="c-asin" style="height:300px"></div>
+        <table class="note">
+          <tr><th>ASIN</th><th>机型</th><th>n</th><th>读法</th></tr>
+          ${(src.asins || []).map((a) => `<tr>
+            <td>${esc(a.asin)}</td><td>${esc(a.name)}</td><td>${a.n}</td><td>${esc(a.note || "")}</td>
+          </tr>`).join("")}
+        </table>
+      </div>
+    </div>`;
+
+  if (typeof echarts === "undefined") {
+    srcRoot.insertAdjacentHTML("afterbegin", "<p class='lead'>ECharts 未加载，请检查网络后刷新。</p>");
+    return;
+  }
+
+  const charts = [];
+  function mount(id, option) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const c = echarts.init(el, null, { renderer: "canvas" });
+    c.setOption(option);
+    charts.push(c);
+  }
+  window.addEventListener("resize", () => charts.forEach((c) => c.resize()));
+
+  const time = src.time || [];
+  mount("c-time", {
+    color: [STAR_COLORS[1], STAR_COLORS[2], STAR_COLORS[3], STAR_COLORS[4], STAR_COLORS[5]],
+    tooltip: { ...TIP, trigger: "axis" },
+    legend: { top: 0, icon: "roundRect", itemWidth: 10, itemHeight: 8, textStyle: AXIS },
+    grid: { ...GRID, top: 32 },
+    xAxis: {
+      type: "category",
+      data: time.map((d) => d.m.slice(2)),
+      axisTick: { show: false },
+      axisLine: { lineStyle: { color: "#e8eaed" } },
+      axisLabel: { ...AXIS, interval: 1 },
+    },
+    yAxis: {
+      type: "value",
+      splitLine: { lineStyle: { color: "#f1f3f5" } },
+      axisLabel: AXIS,
+    },
+    series: [1, 2, 3, 4, 5].map((star) => ({
+      name: star + " 星",
+      type: "bar",
+      stack: "star",
+      barMaxWidth: 18,
+      emphasis: { focus: "series" },
+      data: time.map((d) => d[String(star)] || 0),
+    })),
+  });
+
+  mount("c-star", {
+    color: [STAR_COLORS[5], STAR_COLORS[4], STAR_COLORS[3], STAR_COLORS[2], STAR_COLORS[1]],
+    tooltip: { ...TIP, trigger: "item", formatter: "{b}<br/>{c} 条（{d}%）" },
+    legend: { bottom: 0, icon: "circle", itemWidth: 8, textStyle: AXIS },
+    series: [{
+      type: "pie",
+      radius: ["52%", "72%"],
+      center: ["50%", "44%"],
+      avoidLabelOverlap: true,
+      label: { show: false },
+      itemStyle: { borderColor: "#fff", borderWidth: 2 },
+      data: (src.stars || []).map((s) => ({ name: s.star + " 星", value: s.n })),
+    }],
+    graphic: [{
+      type: "text",
+      left: "center",
+      top: "38%",
+      style: { text: String(src.rating || ""), fill: "#111827", fontSize: 22, fontWeight: 650, align: "center" },
+    }, {
+      type: "text",
+      left: "center",
+      top: "50%",
+      style: { text: "均分", fill: "#9aa1ab", fontSize: 11, align: "center" },
+    }],
+  });
+
+  const mix = src.mix || {};
+  mount("c-mix", {
+    color: ["#10b981", "#ef4444", "#6366f1", "#d1d5db"],
+    tooltip: { ...TIP, trigger: "item", formatter: "{b}<br/>{c} 条（{d}%）" },
+    legend: { bottom: 0, icon: "circle", itemWidth: 8, textStyle: AXIS },
+    series: [{
+      type: "pie",
+      radius: ["52%", "72%"],
+      center: ["50%", "44%"],
+      label: { show: false },
+      itemStyle: { borderColor: "#fff", borderWidth: 2 },
+      data: [
+        { name: "好评", value: mix["好评"] || 0 },
+        { name: "差评", value: mix["差评"] || 0 },
+        { name: "混合", value: mix["混合"] || 0 },
+        { name: "信息不足", value: mix["信息不足"] || 0 },
+      ],
+    }],
+  });
+
+  mount("c-type", {
+    color: ["#3b82f6"],
+    tooltip: { ...TIP, trigger: "axis", axisPointer: { type: "shadow" } },
+    grid: { left: 8, right: 16, top: 8, bottom: 0, containLabel: true },
+    xAxis: { type: "value", splitLine: { lineStyle: { color: "#f1f3f5" } }, axisLabel: AXIS },
+    yAxis: {
+      type: "category",
+      inverse: true,
+      data: ["VP", "纯文本", "有图", "有视频", "Vine"],
+      axisTick: { show: false },
+      axisLine: { show: false },
+      axisLabel: { ...AXIS, color: "#4b5563" },
+    },
+    series: [{
+      type: "bar",
+      barWidth: 12,
+      itemStyle: { borderRadius: [0, 6, 6, 0], color: "#3b82f6" },
+      data: [src.vp || 0, src.text_only || 0, src.image || 0, src.video || 0, src.vine || 0],
+    }],
+  });
+
+  mount("c-brand", {
+    color: ["#111827"],
+    tooltip: { ...TIP, trigger: "axis", axisPointer: { type: "shadow" } },
+    grid: { left: 8, right: 16, top: 8, bottom: 0, containLabel: true },
+    xAxis: { type: "value", splitLine: { lineStyle: { color: "#f1f3f5" } }, axisLabel: AXIS },
+    yAxis: {
+      type: "category",
+      inverse: true,
+      data: (src.brands || []).map((b) => b.name),
+      axisTick: { show: false },
+      axisLine: { show: false },
+      axisLabel: { ...AXIS, color: "#4b5563" },
+    },
+    series: [{
+      type: "bar",
+      barWidth: 12,
+      itemStyle: { borderRadius: [0, 6, 6, 0], color: "#111827" },
+      data: (src.brands || []).map((b) => b.n),
+    }],
+  });
+
+  mount("c-country", {
+    tooltip: { ...TIP, trigger: "axis", axisPointer: { type: "shadow" } },
+    grid: { left: 8, right: 16, top: 8, bottom: 0, containLabel: true },
+    xAxis: { type: "value", splitLine: { lineStyle: { color: "#f1f3f5" } }, axisLabel: AXIS },
+    yAxis: {
+      type: "category",
+      inverse: true,
+      data: (src.countries || []).map((c) => c[0]),
+      axisTick: { show: false },
+      axisLine: { show: false },
+      axisLabel: { ...AXIS, color: "#4b5563" },
+    },
+    series: [{
+      type: "bar",
+      barWidth: 10,
+      itemStyle: { borderRadius: [0, 6, 6, 0], color: "#64748b" },
+      data: (src.countries || []).map((c) => c[1]),
+    }],
+  });
+
+  mount("c-asin", {
+    tooltip: { ...TIP, trigger: "axis", axisPointer: { type: "shadow" } },
+    grid: { left: 8, right: 16, top: 8, bottom: 8, containLabel: true },
+    xAxis: { type: "value", splitLine: { lineStyle: { color: "#f1f3f5" } }, axisLabel: AXIS },
+    yAxis: {
+      type: "category",
+      inverse: true,
+      data: (src.asins || []).map((a) => a.name),
+      axisTick: { show: false },
+      axisLine: { show: false },
+      axisLabel: { ...AXIS, color: "#4b5563", fontSize: 11 },
+    },
+    series: [{
+      type: "bar",
+      barWidth: 11,
+      itemStyle: { borderRadius: [0, 6, 6, 0], color: "#2563eb" },
+      data: (src.asins || []).map((a) => a.n),
+    }],
+  });
+})();
+</script>
+</body>
+</html>

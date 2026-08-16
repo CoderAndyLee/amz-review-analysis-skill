@@ -1,0 +1,18 @@
+__pycache__/
+*.py[cod]
+*.so
+.Python
+.DS_Store
+.idea/
+.vscode/
+*.xlsx
+*.xlsm
+*.xls
+/1 Products/
+/2 Reviews/
+/3 Data/
+/5 Work/*.json
+/5 Work/*.jsonl
+.env
+.venv/
+venv/
