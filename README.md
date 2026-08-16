@@ -86,6 +86,8 @@ python scripts/build_delivery.py \
 
 ## Demo
 
+![详细分析：一级/二级分类树 + 英文买家原话摘录](assets/demo-taxonomy.jpg)
+
 打开 `examples/robotic-lawn-mower/review-analysis.html`（需能访问 ECharts CDN）。
 
 - 默认只显示英文原话，点「翻译」出中文
