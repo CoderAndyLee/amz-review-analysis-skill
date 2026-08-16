@@ -108,13 +108,14 @@ python scripts/build_delivery.py \
 
 使用问题、类目特例、想看别的类目怎么跑，都欢迎来聊。加微信请备注 **Review Skill**。
 
-| 个人微信 `andylee610` | 公众号「ANDY聊跨境」 |
-| --- | --- |
-| <img src="assets/qr-wechat.jpg" alt="个人微信二维码 andylee610" width="200" /> | <img src="assets/qr-mp.jpg" alt="公众号 ANDY聊跨境 二维码" width="200" /> |
+<p align="center">
+  <img src="assets/qr-wechat.jpg" alt="个人微信二维码 andylee610" width="180" />
+  <img src="assets/qr-mp.jpg" alt="公众号 ANDY聊跨境 二维码" width="180" />
+  <img src="assets/qr-group.jpg" alt="跨境AI交流群二维码" width="180" />
+  <img src="assets/qr-site.jpg" alt="amzandy.cn 二维码" width="180" />
+</p>
 
-| 跨境 AI 交流群 | 博客官网 |
-| --- | --- |
-| <img src="assets/qr-group.jpg" alt="跨境AI交流群二维码" width="200" /> | <img src="assets/qr-site.jpg" alt="amzandy.cn 二维码" width="200" /> |
+从左到右：个人微信 `andylee610`（备注 Review Skill）· 公众号「ANDY聊跨境」· 跨境 AI 交流群 · 博客官网 [amzandy.cn](https://www.amzandy.cn)
 
 > 群二维码有效期较短，过期了就加个人微信，备注「进群」拉你。
 
@@ -148,7 +149,7 @@ Copyright © 2026 Andy（CoderAndyLee / Andy聊跨境）。保留所有权利。
 - 洗稿、镜像成「全宇宙第一的某某 Skill」去引流割韭菜
 
 开源是为了让卖家自己用起来，不是给中介补货架。
-商业合作、内训授权、二次分发：先加微信谈，谈完再动。
+商业合作、内训授权、二次分发：请通过微信获取正式授权。
 
 > 本项目对个人学习和团队内部使用 **完全免费**。如果有人向您收费出售，请拒绝交易，欢迎把情况反馈给作者。
 
