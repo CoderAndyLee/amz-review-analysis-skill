@@ -106,13 +106,13 @@ python scripts/build_delivery.py \
 
 使用问题、类目特例、想看别的类目怎么跑，都欢迎来聊。加微信请备注 **Review Skill**。
 
-| 个人微信`andylee610` | 公众号「ANDY聊跨境」 |
-| ---------------------- | -------------------- |
-|                        |                      |
+| 个人微信 `andylee610` | 公众号「ANDY聊跨境」 |
+| --- | --- |
+| <img src="assets/qr-wechat.jpg" alt="个人微信二维码 andylee610" width="200" /> | <img src="assets/qr-mp.jpg" alt="公众号 ANDY聊跨境 二维码" width="200" /> |
 
 | 跨境 AI 交流群 | 博客官网 |
-| -------------- | -------- |
-|                |          |
+| --- | --- |
+| <img src="assets/qr-group.jpg" alt="跨境AI交流群二维码" width="200" /> | <img src="assets/qr-site.jpg" alt="amzandy.cn 二维码" width="200" /> |
 
 > 群二维码有效期较短，过期了就加个人微信，备注「进群」拉你。
 
