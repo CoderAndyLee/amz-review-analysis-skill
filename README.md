@@ -72,15 +72,15 @@ Claude Code 则链接到项目内的 `.claude/skills/amz-review-analysis`。
 
 ## 脚本
 
-| 脚本 | 作用 |
-| --- | --- |
-| `scripts/merge_reviews.py` | 合并多份 Review，回挂产品，回填 Listing，添加旗标 |
-| `scripts/sample_reviews.py` | 按品牌 × 星级抽取第 1 波样本 |
-| `scripts/apply_annotations.py` | 将 JSONL 回写总表，持续生长分类列 |
-| `scripts/export_pending.py` | 导出未标注行 |
-| `scripts/merge_columns.py` | 合并近义列并迁移摘录 |
-| `scripts/taxonomy_stats.py` | 统计一级 / 二级分类频次 |
-| `scripts/build_delivery.py` | 生成交付 Excel、完整 `board-data.js`，并复制看板 HTML |
+| 脚本                           | 作用                                                 |
+| ------------------------------ | ---------------------------------------------------- |
+| `scripts/merge_reviews.py`     | 合并多份 Review，回挂产品，回填 Listing，添加旗标    |
+| `scripts/sample_reviews.py`    | 按品牌 × 星级抽取第 1 波样本                         |
+| `scripts/apply_annotations.py` | 将 JSONL 回写总表，持续生长分类列                    |
+| `scripts/export_pending.py`    | 导出未标注行                                         |
+| `scripts/merge_columns.py`     | 合并近义列并迁移摘录                                 |
+| `scripts/taxonomy_stats.py`    | 统计一级 / 二级分类频次                              |
+| `scripts/build_delivery.py`    | 生成交付 Excel、完整`board-data.js`，并复制看板 HTML |
 
 出板示例：
 
@@ -166,8 +166,8 @@ python scripts/build_delivery.py \
 
 跨境与 AI 方向的实用站点，按需取用。如需互换友链，可以通过微信联系。
 
-| 站点                                   | 简介                                                          |
-| -------------------------------------- | ------------------------------------------------------------- |
+| 站点                                    | 简介                                                          |
+| --------------------------------------- | ------------------------------------------------------------- |
 | [Andy聊跨境](https://www.amzandy.cn)    | 作者博客：选品、广告、AI 落地的实战长文                       |
 | [DeepSeller](https://www.deepseller.cn) | AI 赋能的跨境电商解决方案：工具、课程与卖家社群               |
 | [DEEPAMZ](https://www.deepamz.com)      | AI 赋能的跨境电商解决方案：工具、课程与卖家社群（亚马逊方向） |
@@ -178,7 +178,7 @@ Copyright © 2026 Andy（CoderAndyLee / Andy聊跨境）。保留所有权利。
 
 **可以：**
 
-- 个人学习
+- 个人学习、自用业务提效
 - 自己店铺、自己团队内部使用
 - 保留作者信息和本声明的前提下转发、收藏、二次开发自用
 
