@@ -82,7 +82,7 @@ Claude Code 则链接到项目内的 `.claude/skills/amz-review-analysis`。
 | `scripts/taxonomy_stats.py`    | 统计一级 / 二级分类频次                              |
 | `scripts/build_delivery.py`    | 生成交付 Excel、完整`board-data.js`，并复制看板 HTML |
 
-出板示例：
+出板示例（第一遍出骨架；Agent 写好 `cards.json` / `direction.json` 精编文案后，带 `--cards-json` / `--direction-json` 重跑出成品，看板「口碑速读 / 评论总结」由文案数据渲染，不写死在 HTML 里）：
 
 ```bash
 python scripts/build_delivery.py \
@@ -90,7 +90,10 @@ python scripts/build_delivery.py \
   --out-dir "<cat>/4 Reports" \
   --category "Robotic Lawn Mower" \
   --marketplace US \
-  --date 2026/08/13
+  --date 2026/08/13 \
+  --excerpts-cn "<cat>/5 Work/excerpts_cn.json" \
+  --cards-json "<cat>/5 Work/cards.json" \
+  --direction-json "<cat>/5 Work/direction.json"
 ```
 
 方法内核见 [`references/taxonomy-protocol.md`](references/taxonomy-protocol.md) 和 [`references/guide.md`](references/guide.md)，看板约定见 [`references/product-dev-spec.md`](references/product-dev-spec.md)。
@@ -99,7 +102,7 @@ python scripts/build_delivery.py \
 
 ![详细分析：一级/二级分类树 + 英文买家原话摘录](assets/demo-taxonomy.jpg)
 
-打开 [`examples/robotic-lawn-mower/review-analysis.html`](examples/robotic-lawn-mower/review-analysis.html) 查看完整 Demo（需能访问 ECharts CDN）。
+打开 [`examples/robotic-lawn-mower/review-analysis.html`](examples/robotic-lawn-mower/review-analysis.html) 查看完整 Demo（需能访问 ECharts CDN）；第二个类目 Demo 见 [`examples/car-phone-mount/`](examples/car-phone-mount/)（5 个 ASIN / 40 条，含无 1–3 星样本的差评挖掘口径）。
 
 - 默认只显示英文原话，点「翻译」出中文
 - 07 是改进思路 / 新品方向，不是差评复读

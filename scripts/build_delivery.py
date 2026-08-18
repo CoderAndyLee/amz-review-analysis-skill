@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 from collections import Counter, defaultdict
 from datetime import datetime
@@ -179,10 +180,35 @@ def star_stats(recs):
             stars[s] += 1
     n = sum(stars.values()) or 1
     weighted = sum(k * stars[k] for k in stars) / n
-    return stars, n, round(weighted, 1)
+    return stars, n, round(weighted, 2)
 
 
-def write_readme(wb, meta, recs):
+def star_formula(stars, n, spaced=False):
+    j = " + " if spaced else "+"
+    calc = j.join(f"{s}×{stars[s]}" for s in (5, 4, 3, 2, 1) if stars[s])
+    if not calc:
+        return ""
+    return f"({calc}) / {n}" if spaced else f"({calc})/{n}"
+
+
+SHEET_DESC = {
+    "reviews_master": "全量标注总表；分类列先全部好评、再全部差评，同极性内按一级/二级频次降序",
+    "taxonomy": "活分类词典",
+    "一级频次": "主分析下一级命中条数",
+    "二级频次": "叶列（含三级）按 n 降序",
+    "星级分布": "1–5 星数量与占比",
+    "品牌切片": "品牌×差评一级结构",
+    "ASIN切片": "listing 把脉",
+    "源表字段": "VP/Vine/国家/图视频/赞同/年份",
+    "评论总结": "六张卡文案",
+    "详细分析": "01–06 板块的二级条目",
+    "产品方向": "卖点与新品命题",
+    "覆盖率": "下载条数 vs 站点评分数",
+    "层级透视": "极性→一级→二级→三级→原文摘录，频次降序；可用左侧分组加减号一层层展开",
+}
+
+
+def write_readme(wb, meta, recs, extra_rows=None):
     main = main_set(recs)
     stars, n_star, rating = star_stats(main)
     mix = Counter(r.get("sentiment_mix") or "" for r in main)
@@ -195,14 +221,24 @@ def write_readme(wb, meta, recs):
     rows = [
         ("样本", f"{meta.get('marketplace', '')} {meta.get('category', '')}；日期 {meta.get('date', '')}"),
         ("总行数", f"{len(recs)} 条（含配件旗标行）"),
-        ("主分析口径", f"排除 flag_accessory_model=Y，主分析 {len(main)} 条"),
-        ("综合评分", f"{rating} / 5"),
-        ("星级", " · ".join(f"{s}★ {stars[s]}" for s in (5, 4, 3, 2, 1))),
-        ("sentiment_mix", f"混合 {mix.get('混合', 0)} · 好评 {mix.get('好评', 0)} · 差评 {mix.get('差评', 0)} · 信息不足 {mix.get('信息不足', 0)}"),
-        ("分类列", "极性|一级|二级 或 极性|一级|二级|三级；单元格为买家原文摘录"),
-        ("不是普查", "抬头写清下载覆盖和未进池的头部 ASIN，禁止写成全类目结论"),
-        ("看板", "4 Reports/review-analysis.html + board-data.js"),
+        ("主分析口径", f"排除 flag_accessory_model=Y 的 {len(recs) - len(main)} 条配件行，主分析 {len(main)} 条"),
+        ("综合评分", f"{round(rating, 1)} / 5 = {star_formula(stars, n_star, spaced=True)}"),
+        ("星级占比", " · ".join(f"{s}★ {stars[s] / n_star:.0%}" for s in (5, 4, 3, 2, 1))),
+        ("sentiment_mix", f"混合 {mix.get('混合', 0)} · 好评 {mix.get('好评', 0)} · 差评 {mix.get('差评', 0)} · 信息不足 {mix.get('信息不足', 0)}（主分析）"),
+        (
+            "VP / Vine",
+            f"VP {sum(1 for r in main if r.get('flag_vp') == 'Y')} · Vine {sum(1 for r in main if r.get('flag_vine') == 'Y')}，开箱观感类好评需打折",
+        ),
     ]
+    if extra_rows:
+        rows.extend((a, b) for a, b in extra_rows)
+    rows.extend(
+        [
+            ("分类列", "极性|一级|二级 或 极性|一级|二级|三级；单元格为买家原文摘录"),
+            ("不是普查", "抬头写清下载覆盖和未进池的头部 ASIN，禁止写成全类目结论"),
+            ("看板", "4 Reports/review-analysis.html + board-data.js"),
+        ]
+    )
     ws.append(["字段", "说明"])
     for a, b in rows:
         ws.append([a, b])
@@ -213,6 +249,16 @@ def write_readme(wb, meta, recs):
     ws.column_dimensions["B"].width = 88
     for row in ws.iter_rows(min_row=3, max_row=ws.max_row):
         row[1].alignment = WRAP
+
+
+def append_sheet_index(wb):
+    ws = wb["00_说明"]
+    for name in wb.sheetnames:
+        if name == "00_说明":
+            continue
+        base = re.sub(r"^\d+_", "", name)
+        ws.append([name, SHEET_DESC.get(base, "")])
+        ws.cell(ws.max_row, 2).alignment = WRAP
 
 
 def write_master(wb, header, recs):
@@ -292,17 +338,19 @@ def write_stars(wb, recs):
         ws.append([s, stars[s], round(stars[s] / n, 4)])
     ws.append([])
     ws.append(["主分析条数", n, ""])
-    ws.append(["加权均分", weighted, ""])
+    ws.append(["加权均分", weighted, star_formula(stars, n)])
     autosize(ws, max_width=48)
 
 
-def write_brand(wb, header, recs):
+def write_brand(wb, header, recs, notes=None):
     cols = cat_cols(header)
     main = main_set(recs)
     tree = build_tree(header, recs)
     neg_l1 = [name for name, _ in sorted_items(tree["差评"]["l1"])]
     ws = wb.create_sheet("06_品牌切片")
     heads = ["品牌", "n", "好评", "差评", "混合", "信息不足"] + [f"差评|{n}" for n in neg_l1]
+    if notes:
+        heads.append("读法")
     header_row(ws, heads)
     brands = []
     seen = set()
@@ -320,17 +368,26 @@ def write_brand(wb, header, recs):
             prefix = f"差评|{name}"
             hit = sum(1 for r in subset if any(r.get(c) and str(c).startswith(prefix) for c in cols))
             row.append(hit)
+        if notes:
+            row.append(notes.get(brand, ""))
         ws.append(row)
     autosize(ws, max_width=40)
 
 
-def write_asin(wb, recs):
+def write_asin(wb, recs, meta_map=None):
     main = main_set(recs)
     by_listing = defaultdict(list)
     for r in main:
         by_listing[r.get("listing_asin") or r.get("ASIN")].append(r)
     ws = wb.create_sheet("07_ASIN切片")
-    header_row(ws, ["listing_asin", "品牌", "n", "好评", "差评", "混合", "站点评分数", "覆盖率"])
+    heads = ["listing_asin"]
+    if meta_map:
+        heads.append("机型")
+    heads.append("品牌")
+    heads += ["n", "好评", "差评", "混合", "站点评分数", "覆盖率"]
+    if meta_map:
+        heads.append("一句话")
+    header_row(ws, heads)
     items = sorted(by_listing.items(), key=lambda kv: -len(kv[1]))
     for asin, subset in items:
         mix = Counter(r.get("sentiment_mix") or "" for r in subset)
@@ -340,18 +397,14 @@ def write_asin(wb, recs):
             cov = round(n / float(listed), 4) if listed else None
         except (TypeError, ValueError, ZeroDivisionError):
             cov = None
-        ws.append(
-            [
-                asin,
-                subset[0].get("品牌") if subset else "",
-                n,
-                mix.get("好评", 0),
-                mix.get("差评", 0),
-                mix.get("混合", 0),
-                listed,
-                cov,
-            ]
-        )
+        row = [asin]
+        if meta_map:
+            row.append((meta_map.get(asin) or {}).get("model", ""))
+        row.append(subset[0].get("品牌") if subset else "")
+        row += [n, mix.get("好评", 0), mix.get("差评", 0), mix.get("混合", 0), listed, cov]
+        if meta_map:
+            row.append((meta_map.get(asin) or {}).get("note", ""))
+        ws.append(row)
     autosize(ws, max_width=24)
 
 
@@ -369,6 +422,40 @@ def write_source(wb, recs):
     for k, n in Counter(str(r.get("评论时间") or "")[:4] or "NA" for r in main).most_common():
         ws.append(["年份", k, n])
     autosize(ws)
+
+
+def write_cards(wb, cards):
+    ws = wb.create_sheet("09_评论总结")
+    header_row(ws, ["卡片", "正文"])
+    for c in cards:
+        title, text = (c["title"], c["text"]) if isinstance(c, dict) else (c[0], c[1])
+        ws.append([title, text])
+        ws.row_dimensions[ws.max_row].height = 72
+        ws.cell(ws.max_row, 2).alignment = WRAP
+    ws.column_dimensions["A"].width = 14
+    ws.column_dimensions["B"].width = 96
+
+
+def write_direction_sheet(wb, rows):
+    ws = wb.create_sheet("11_产品方向")
+    header_row(ws, ["类型", "优先级", "命题", "证据", "n提示"])
+    for row in rows:
+        ws.append(list(row))
+        ws.cell(ws.max_row, 3).alignment = WRAP
+        ws.cell(ws.max_row, 4).alignment = WRAP
+        ws.row_dimensions[ws.max_row].height = 28
+    ws.column_dimensions["A"].width = 14
+    ws.column_dimensions["B"].width = 10
+    ws.column_dimensions["C"].width = 48
+    ws.column_dimensions["D"].width = 40
+    ws.column_dimensions["E"].width = 10
+
+
+def renumber_sheets(wb):
+    # 未提供 Agent 文案时跳过 09/11，重排前缀保证编号连续
+    for i, ws in enumerate(wb.worksheets):
+        base = re.sub(r"^\d+_", "", ws.title)
+        ws.title = f"{i:02d}_{base}"
 
 
 def write_tree_derived_detail(wb, header, recs):
@@ -584,22 +671,60 @@ def default_direction(tree, zh):
     return {"highlights": collect_pol(tree, "好评", zh), "pains": pains[:12]}
 
 
-def emit_board_data(out_js: Path, header, recs, meta, zh, direction):
+CARD_JUMP = {
+    "好评亮点": "s01", "差评痛点": "s02", "买家期待": "s03",
+    "人群画像": "s04", "使用场景": "s05", "购买理由": "s06",
+}
+
+
+def build_cards_data(cards, hero):
+    cards_data = {}
+    if hero:
+        for k in ("lead", "chips", "note"):
+            if hero.get(k):
+                cards_data[k] = hero[k]
+    items = []
+    for c in cards or []:
+        title, text = (c["title"], c["text"]) if isinstance(c, dict) else (c[0], c[1])
+        item = {"jump": CARD_JUMP.get(title, ""), "title": title, "text": text}
+        if item["jump"]:
+            items.append(item)
+    if items:
+        cards_data["cards"] = items
+    return cards_data
+
+
+def emit_board_data(out_js: Path, header, recs, meta, zh, direction, cards=None):
+    agent_hero = direction.get("hero") if isinstance(direction, dict) else None
     tree = build_tree(header, recs)
-    sections = []
-    for sid, no, title, pol, lead in SECTION_SPEC:
-        if pol == "both":
-            l1 = collect_pol(tree, "好评", zh) + collect_pol(tree, "差评", zh)
-        else:
-            l1 = collect_pol(tree, pol, zh)
-        sections.append({"id": sid, "no": no, "title": title, "lead": lead, "l1": l1})
-    if direction is None:
-        direction = default_direction(tree, zh)
-    source = build_source_data(recs)
+    if isinstance(direction, dict) and direction.get("board"):
+        sections = direction["board"]
+    else:
+        sections = []
+        for sid, no, title, pol, lead in SECTION_SPEC:
+            if pol == "both":
+                l1 = collect_pol(tree, "好评", zh) + collect_pol(tree, "差评", zh)
+            else:
+                l1 = collect_pol(tree, pol, zh)
+            sections.append({"id": sid, "no": no, "title": title, "lead": lead, "l1": l1})
+    if isinstance(direction, dict):
+        direction_out = {
+            "highlights": direction.get("highlights", []),
+            "pains": direction.get("pains", []),
+        }
+    elif direction is None:
+        direction_out = default_direction(tree, zh)
+    else:
+        direction_out = direction
+    if isinstance(direction, dict) and direction.get("source"):
+        source = direction["source"]
+    else:
+        source = build_source_data(recs)
     parts = [
-        "window.PAGE_META = " + json.dumps(meta, ensure_ascii=False) + ";\n",
+        "window.PAGE_META = " + json.dumps(meta, ensure_ascii=False, separators=(",", ":")) + ";\n",
+        "window.CARDS_DATA = " + json.dumps(build_cards_data(cards, agent_hero), ensure_ascii=False) + ";\n",
         "window.BOARD_DATA = " + json.dumps(sections, ensure_ascii=False) + ";\n",
-        "window.DIRECTION_DATA = " + json.dumps(direction, ensure_ascii=False) + ";\n",
+        "window.DIRECTION_DATA = " + json.dumps(direction_out, ensure_ascii=False) + ";\n",
         "window.SOURCE_DATA = " + json.dumps(source, ensure_ascii=False) + ";\n",
     ]
     out_js.write_text("".join(parts), encoding="utf-8")
@@ -623,7 +748,12 @@ def main():
     parser.add_argument("--date", default="")
     parser.add_argument("--title", default="Amazon Review Analysis")
     parser.add_argument("--excerpts-cn", default="", help="optional {en: cn} json")
-    parser.add_argument("--direction-json", default="", help="optional DIRECTION_DATA json")
+    parser.add_argument("--cards-json", default="", help="optional [{'title','text'}] json，写 09_评论总结")
+    parser.add_argument(
+        "--direction-json",
+        default="",
+        help="optional json：hero（速读一句话/chips）/ board（精编 BOARD_DATA）/ highlights / pains（DIRECTION_DATA）/ rows（写 11_产品方向）/ source（精编 SOURCE_DATA）",
+    )
     args = parser.parse_args()
 
     master = Path(args.master).expanduser()
@@ -639,28 +769,36 @@ def main():
     zh = load_json(Path(args.excerpts_cn).expanduser()) if args.excerpts_cn else {}
     zh = zh or {}
     direction = load_json(Path(args.direction_json).expanduser()) if args.direction_json else None
+    cards = load_json(Path(args.cards_json).expanduser()) if args.cards_json else None
+    agent = direction if isinstance(direction, dict) else {}
 
     header, recs, tax_h, tax_recs, cov_h, cov_recs = load_master(master)
     wb = openpyxl.Workbook()
-    write_readme(wb, meta, recs)
+    write_readme(wb, meta, recs, extra_rows=agent.get("readme_extra"))
     write_master(wb, header, recs)
     write_taxonomy(wb, tax_h, tax_recs)
     write_l1(wb, header, recs)
     write_l2(wb, tax_recs)
     write_stars(wb, recs)
-    write_brand(wb, header, recs)
-    write_asin(wb, recs)
+    write_brand(wb, header, recs, notes=agent.get("brand_notes"))
+    write_asin(wb, recs, meta_map=agent.get("asin_meta"))
     write_source(wb, recs)
+    if cards:
+        write_cards(wb, cards)
     write_tree_derived_detail(wb, header, recs)
+    if agent.get("rows"):
+        write_direction_sheet(wb, agent["rows"])
     write_coverage(wb, cov_h, cov_recs)
     write_tree_sheet(wb, header, recs)
+    renumber_sheets(wb)
+    append_sheet_index(wb)
 
     slug = args.category.replace(" ", "-")
     stamp = date.replace("/", "")
     xlsx = out_dir / f"{slug}-Review-Analysis-{stamp}.xlsx"
     wb.save(xlsx)
 
-    emit_board_data(out_dir / "board-data.js", header, recs, meta, zh, direction)
+    emit_board_data(out_dir / "board-data.js", header, recs, meta, zh, direction, cards=cards)
     html_src = Path(args.html_template).expanduser()
     if html_src.exists():
         shutil.copy2(html_src, out_dir / "review-analysis.html")

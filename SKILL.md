@@ -112,6 +112,8 @@ python <skill>/scripts/merge_columns.py \
 
 ### 5. 报告与看板
 
+第一遍出骨架（统计层 + 01–06 的树 + 层级透视；sheet 编号自动连续）：
+
 ```bash
 python <skill>/scripts/build_delivery.py \
   --master "<cat>/3 Data/reviews_master.xlsx" \
@@ -122,15 +124,36 @@ python <skill>/scripts/build_delivery.py \
   --date 2026/08/13
 ```
 
-卡片约 200 字，由 Agent 写入看板文案和 `DIRECTION_DATA`（07 每条行动必须绑 1–2 条原声）。脚本会写出统计层、层级透视、`SOURCE_DATA` 和 01–06 的树。
+然后 Agent 精编文案，落成两份 json（不要直接改生成物）：
 
-看板标题不要写死类目名。`board-data.js` 里的 `PAGE_META` 只改 `category` / `marketplace` / `date`。
+- `<cat>/5 Work/cards.json`：六张卡，每张约 200 字，写判断不堆例子（同时渲染到看板「评论总结」区和 `09_评论总结`）
+- `<cat>/5 Work/direction.json`：
+  - `hero`：看板「买家口碑速读」的一句话 lead、chips、note；不写则脚本用一级频次自动生成
+  - `board`：精编后的 BOARD_DATA 分区（精选一级、二级 desc 写判断句、分区 lead）
+  - `highlights` / `pains`：07 的行动与新品方向，每条绑 1–2 条原声
+  - `rows`：11_产品方向 表行 `[类型, 优先级, 命题, 证据, n提示]`
+  - `source`：品牌/ASIN 的 `note`、`years`、`models` 等精编字段
+  - `brand_notes`（06 读法列）、`asin_meta`（07 机型/一句话列）、`readme_extra`（00 补充行）均可选
 
-Demo：`examples/robotic-lawn-mower/review-analysis.html`。
+第二遍带 json 重跑，得到成品交付（14 个 sheet，含 09_评论总结、11_产品方向）：
+
+```bash
+python <skill>/scripts/build_delivery.py \
+  --master "<cat>/3 Data/reviews_master.xlsx" \
+  --out-dir "<cat>/4 Reports" \
+  --category "Robotic Lawn Mower" --marketplace US --date 2026/08/13 \
+  --excerpts-cn "<cat>/5 Work/excerpts_cn.json" \
+  --cards-json "<cat>/5 Work/cards.json" \
+  --direction-json "<cat>/5 Work/direction.json"
+```
+
+看板标题不要写死类目名，也不要把类目文案写进 HTML 模板：「口碑速读」「评论总结」由 `CARDS_DATA`（cards.json + hero）渲染，评分盒由 `SOURCE_DATA` 渲染。`PAGE_META` 由 `--title/--category/--marketplace/--date` 传入。
+
+Demo：`examples/robotic-lawn-mower/`（`review-analysis.html` + `board-data.js`，及可复现成品的 `cards.json` / `direction.json`）。
 
 ### 6. 收尾
 
-核对：混合评论是否双边进列、摘录是否原文、taxonomy 的 first_row_id 是否可回溯、报告数字能否从总表透视。本轮新学到的类目特例写进 `examples/<category>/`，不另起平行规则。
+核对：混合评论是否双边进列、摘录是否原文、taxonomy 的 first_row_id 是否可回溯、报告数字能否从总表透视。`cards.json` / `direction.json` 与类目特例一起归档进 `examples/<category>/`，保证成品可复现，不另起平行规则。
 
 ## 标注时的硬约束
 

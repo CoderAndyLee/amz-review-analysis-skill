@@ -117,8 +117,7 @@
   .bars { flex: 1; min-width: 0; }
   .bar-row { display: grid; grid-template-columns: 18px 1fr 32px; gap: 6px; align-items: center; margin: 3px 0; font-size: 11px; color: var(--muted); }
   .track { height: 6px; background: #f3e6dc; border-radius: 99px; overflow: hidden; }
-  .fill { height: 100%; border-radius: 99px; background: #fb923c; }
-  .fill.s5 { width: 52%; } .fill.s4 { width: 22%; } .fill.s3 { width: 7%; } .fill.s2 { width: 5%; } .fill.s1 { width: 14%; }
+  .fill { height: 100%; border-radius: 99px; background: #fb923c; width: 0; }
   .note { margin: 8px 0 0; font-size: 11px; color: #9a8476; }
 
   .section-head {
@@ -259,71 +258,34 @@
   <section class="hero">
     <div>
       <h1 class="hero-title"><span class="bolt">⚡</span>买家口碑速读</h1>
-      <p>买家普遍认可免布线建图和日常自动割草能省下每周维护时间，切到的地方效果也不错；但贴边仍常需人工补刀，复杂地形易卡顿，装机调通和续航也不如预期。</p>
-      <div class="chips">
-        <button type="button" class="chip" data-jump="s01" data-l1="无边界/免布线省事">免布线省事</button>
-        <button type="button" class="chip" data-jump="s01" data-l1="使用省心">节省时间</button>
-        <button type="button" class="chip neg" data-jump="s02" data-l1="导航定位差">复杂地形易卡顿</button>
-        <button type="button" class="chip neg" data-jump="s02" data-l1="贴边修剪差">贴边仍需补刀</button>
-        <button type="button" class="chip neg" data-jump="s02" data-l1="安装设置差">装机调通成本</button>
-      </div>
+      <p id="hero-lead"></p>
+      <div class="chips" id="hero-chips"></div>
     </div>
     <div class="score-box">
       <div class="score-row">
         <div class="gauge">
           <svg width="92" height="92" viewBox="0 0 92 92">
             <circle cx="46" cy="46" r="38" fill="none" stroke="#f3e1d4" stroke-width="8"/>
-            <circle cx="46" cy="46" r="38" fill="none" stroke="#fb923c" stroke-width="8"
-              stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="52.53"/>
+            <circle id="gauge-arc" cx="46" cy="46" r="38" fill="none" stroke="#fb923c" stroke-width="8"
+              stroke-linecap="round" stroke-dasharray="238.76" stroke-dashoffset="238.76"/>
           </svg>
-          <div class="gauge-center"><b>3.9</b><span>/ 5</span></div>
+          <div class="gauge-center"><b id="gauge-score">–</b><span>/ 5</span></div>
         </div>
         <div class="bars">
-          <div class="stars">★★★★☆ 综合评论</div>
-          <div class="bar-row"><span>5</span><div class="track"><div class="fill s5"></div></div><span>52%</span></div>
-          <div class="bar-row"><span>4</span><div class="track"><div class="fill s4"></div></div><span>22%</span></div>
-          <div class="bar-row"><span>3</span><div class="track"><div class="fill s3"></div></div><span>7%</span></div>
-          <div class="bar-row"><span>2</span><div class="track"><div class="fill s2"></div></div><span>5%</span></div>
-          <div class="bar-row"><span>1</span><div class="track"><div class="fill s1"></div></div><span>14%</span></div>
+          <div class="stars" id="score-stars">综合评论</div>
+          <div class="bar-row"><span>5</span><div class="track"><div class="fill s5" id="bar-5"></div></div><span id="pct-5">–</span></div>
+          <div class="bar-row"><span>4</span><div class="track"><div class="fill s4" id="bar-4"></div></div><span id="pct-4">–</span></div>
+          <div class="bar-row"><span>3</span><div class="track"><div class="fill s3" id="bar-3"></div></div><span id="pct-3">–</span></div>
+          <div class="bar-row"><span>2</span><div class="track"><div class="fill s2" id="bar-2"></div></div><span id="pct-2">–</span></div>
+          <div class="bar-row"><span>1</span><div class="track"><div class="fill s1" id="bar-1"></div></div><span id="pct-1">–</span></div>
         </div>
       </div>
-      <p class="note">综合评分 · 10 ASIN / 956 条整机样本，非全类目普查</p>
+      <p class="note" id="score-note"></p>
     </div>
   </section>
 
   <h2 class="section-head"><span class="left">评论总结 <span class="hint">点卡片会跳到对应详细分析</span></span></h2>
-  <div class="cards">
-    <article class="card" data-jump="s01">
-      <h3><span class="ico blue">👍</span>好评亮点</h3>
-      <p>买家真正买单的是「调通之后，该割的地方能割好」。378 条写真正切到的地方效果不错，319 条觉得初次安装/建图不算难，275 条强调省心。171 条称赞避障和地面通过性，92 条把免布线当成核心收益。贴边好评只有 63 条，还没有成为稳卖点。</p>
-      <div class="more">买家喜欢什么 →</div>
-    </article>
-    <article class="card" data-jump="s02">
-      <h3><span class="ico orange">💬</span>差评痛点</h3>
-      <p>最大桶是导航定位（243 条）：坑洼卡住 65、上坡打滑 49、丢定位打转 40。其次是安装 203 条。单一二级最高差评是「贴边留边，仍需人工补刀」（106）。混合评论占 48%，很多人不是全盘否定，而是救援和补边太多。</p>
-      <div class="more">差评主要抱怨什么 →</div>
-    </article>
-    <article class="card" data-jump="s03">
-      <h3><span class="ico violet">✨</span>买家期待</h3>
-      <p>要一台免布线、一次建图就能长期自己跑的机器。贴边要真贴到围栏和花坛。坑、坡、湿草上少救援。续航按宣传面积跑完。售后要打得通，配件要买得到。</p>
-      <div class="more">买家希望哪里更好 →</div>
-    </article>
-    <article class="card" data-jump="s04">
-      <h3><span class="ico green">👤</span>人群画像</h3>
-      <p>不想每周推草的有房家庭，以及愿意花几个晚上调地图的科技用户。混合评论近一半：能容忍学习成本，不能容忍长期人肉运维。ANTHBOT 走入门无线 RTK，ECOVACS / NAVIMOW / Mammotion 走品牌溢价。</p>
-      <div class="more">哪些人群更适合 →</div>
-    </article>
-    <article class="card" data-jump="s05">
-      <h3><span class="ico sky">📍</span>使用场景</h3>
-      <p>更合适：1/8–1/2 acre 中小院，平地或缓坡，障碍可控，充电座开阔。不适合：按宣传亩数买小电池机、陡坡湿草坑洼、大树挡 RTK、必须贴边到围栏、不愿自己排障。</p>
-      <div class="more">哪些情况不适合 →</div>
-    </article>
-    <article class="card" data-jump="s06">
-      <h3><span class="ico amber">🛒</span>购买理由</h3>
-      <p>第一动力是替代每周人工或雇人。第二是免布线比埋线省事。入门价尝鲜无线 RTK，旗舰价买 LiDAR、贴边和越野。大量 4 星的潜台词：这个省事值这个价，但还没到完全不用管。</p>
-      <div class="more">值不值这个价 →</div>
-    </article>
-  </div>
+  <div class="cards" id="cards-root"></div>
 
   <h2 class="section-head" id="detail-head">
     <span class="left">详细分析 <span class="hint">点 01–07，再点一级分类</span></span>
@@ -354,6 +316,89 @@
   if (tEl && m.title) tEl.textContent = m.title;
   if (dEl && m.date) dEl.innerHTML = "<i></i>" + m.date;
   if (m.title) document.title = m.date ? m.title + " - " + m.date : m.title;
+})();
+</script>
+<script>
+(function renderHeroAndCards() {
+  const esc = (s) => String(s || "")
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const CARDS = window.CARDS_DATA || {};
+  const BOARD = window.BOARD_DATA || [];
+  const SRC = window.SOURCE_DATA || {};
+
+  // ---- hero 一句话 + chips ----
+  const sec = (id) => BOARD.find((s) => s.id === id) || {};
+  const topL1 = (id) => ((sec(id).l1 || []).slice().sort((a, b) => (b.n || 0) - (a.n || 0))[0] || {}).name || "";
+  const autoLead = () => {
+    const p = topL1("s01"), n = topL1("s02");
+    const bits = [];
+    if (p) bits.push(`好评侧最稳的是「${p}」`);
+    if (n) bits.push(`差评侧最大桶是「${n}」`);
+    return bits.join("；") + (bits.length ? "，详见下方分区。" : "");
+  };
+  document.getElementById("hero-lead").textContent = CARDS.lead || autoLead();
+
+  const chips = CARDS.chips && CARDS.chips.length
+    ? CARDS.chips
+    : []
+        .concat((sec("s01").l1 || []).slice().sort((a, b) => (b.n || 0) - (a.n || 0)).slice(0, 2)
+          .map((l) => ({ jump: "s01", l1: l.name, label: l.name })))
+        .concat((sec("s02").l1 || []).slice().sort((a, b) => (b.n || 0) - (a.n || 0)).slice(0, 3)
+          .map((l) => ({ jump: "s02", l1: l.name, label: l.name, neg: true })));
+  document.getElementById("hero-chips").innerHTML = chips.map((c) =>
+    `<button type="button" class="chip${c.neg ? " neg" : ""}" data-jump="${esc(c.jump)}" data-l1="${esc(c.l1)}">${esc(c.label || c.l1)}</button>`
+  ).join("");
+
+  // ---- 评分盒 ----
+  const rating = Number(SRC.rating) || 0;
+  const CIRC = 238.76;
+  document.getElementById("gauge-arc").setAttribute("stroke-dashoffset", (CIRC * (1 - rating / 5)).toFixed(2));
+  document.getElementById("gauge-score").textContent = rating ? rating.toFixed(1) : "–";
+  const starsTxt = "★".repeat(Math.round(rating)) + "☆".repeat(Math.max(0, 5 - Math.round(rating)));
+  document.getElementById("score-stars").textContent = starsTxt + " 综合评论";
+  const n = Number(SRC.n) || 0;
+  const starMap = {};
+  (SRC.stars || []).forEach((it) => {
+    if (it && typeof it === "object" && "star" in it) starMap[it.star] = it.n;
+    else starMap[it[0]] = it[1];
+  });
+  for (let s = 1; s <= 5; s++) {
+    const cnt = Number(starMap[s]) || 0;
+    const pct = n ? Math.round((cnt / n) * 100) : 0;
+    const bar = document.getElementById("bar-" + s);
+    if (bar) bar.style.width = pct + "%";
+    const pEl = document.getElementById("pct-" + s);
+    if (pEl) pEl.textContent = pct + "%";
+  }
+  const nAsin = (SRC.asins || []).length;
+  document.getElementById("score-note").textContent = CARDS.note
+    || `综合评分 · ${nAsin} ASIN / ${n} 条样本，非全类目普查`;
+
+  // ---- 评论总结六张卡 ----
+  const ICO = {
+    s01: ["blue", "👍", "好评亮点"], s02: ["orange", "💬", "差评痛点"], s03: ["violet", "✨", "买家期待"],
+    s04: ["green", "👤", "人群画像"], s05: ["sky", "📍", "使用场景"], s06: ["amber", "🛒", "购买理由"],
+  };
+  const MORE = {
+    s01: "买家喜欢什么 →", s02: "差评主要抱怨什么 →", s03: "买家希望哪里更好 →",
+    s04: "哪些人群更适合 →", s05: "哪些情况不适合 →", s06: "值不值这个价 →",
+  };
+  const byJump = {};
+  (CARDS.cards || []).forEach((c) => { byJump[c.jump || ""] = c; });
+  const order = ["s01", "s02", "s03", "s04", "s05", "s06"];
+  const html = order.map((id) => {
+    const cfg = ICO[id];
+    const custom = byJump[id] || {};
+    const fallback = BOARD.find((s) => s.id === id);
+    const title = custom.title || cfg[2];
+    const text = custom.text || (fallback ? fallback.lead || "" : "");
+    return `<article class="card" data-jump="${id}">
+      <h3><span class="ico ${cfg[0]}">${cfg[1]}</span>${esc(title)}</h3>
+      <p>${esc(text)}</p>
+      <div class="more">${MORE[id]}</div>
+    </article>`;
+  }).join("");
+  document.getElementById("cards-root").innerHTML = html;
 })();
 </script>
 <script>
@@ -556,7 +601,7 @@
   srcRoot.innerHTML = `
     <div class="dash">
       <div class="kpi-row">
-        <div class="kpi"><div class="k">样本量</div><div class="v">${src.n || 0}</div><div class="s">主分析整机评论</div></div>
+        <div class="kpi"><div class="k">样本量</div><div class="v">${src.n || 0}</div><div class="s">主分析评论</div></div>
         <div class="kpi"><div class="k">加权均分</div><div class="v">${src.rating || "—"}</div><div class="s">按 1–5 星加权</div></div>
         <div class="kpi"><div class="k">有赞同</div><div class="v">${src.helpful || 0}</div><div class="s">赞同数 &gt; 0</div></div>
         <div class="kpi"><div class="k">VP / Vine</div><div class="v">${src.vp || 0}<span style="font-size:16px;color:#9aa1ab;font-weight:500"> / ${src.vine || 0}</span></div><div class="s">激励评论占比偏高</div></div>
@@ -586,12 +631,12 @@
       <div class="dash-row cols-2">
         <div class="dash-card">
           <div class="dash-h">品牌样本量</div>
-          <div class="dash-sub">仅本批 10 个 ASIN，非全类目</div>
+          <div class="dash-sub">仅本批 ${(src.asins || []).length} 个 ASIN，非全类目</div>
           <div class="chart" id="c-brand" style="height:260px"></div>
         </div>
         <div class="dash-card">
           <div class="dash-h">国家分布</div>
-          <div class="dash-sub">非美评论主要来自 ANTHBOT 导出混入</div>
+          <div class="dash-sub">${(() => { const cs = src.countries || []; const non = cs.filter((c) => c[0] !== "US").reduce((a, c) => a + (c[1] || 0), 0); return non ? `非美评论 ${non} 条，注意导出来源` : "全部为美区评论"; })()}</div>
           <div class="chart" id="c-country" style="height:260px"></div>
         </div>
       </div>

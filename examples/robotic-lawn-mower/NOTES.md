@@ -33,3 +33,20 @@
 ## 07
 
 二级仍是差评（贴边、卡住、装机…）。展开才是「改进思路」和「新品方向」，每条绑 1–2 句原话。
+
+## 复现成品
+
+`cards.json` / `direction.json` 是本轮 Agent 精编文案（六张卡、看板分区与 desc、产品方向行、品牌/ASIN 点评）。配合项目 `3 Data/reviews_master.xlsx` 重跑：
+
+```bash
+python <skill>/scripts/build_delivery.py \
+  --master ".../3 Data/reviews_master.xlsx" \
+  --out-dir <输出目录> \
+  --category "Robotic Lawn Mower" --marketplace US --date 2026/08/13 \
+  --title "Amazon Review Analysis" \
+  --excerpts-cn ".../5 Work/excerpts_cn.json" \
+  --cards-json cards.json \
+  --direction-json direction.json
+```
+
+得到的 `board-data.js` 与 2026/08/13 交付版逐字节一致；交付簿 14 个 sheet 中 12 个内容一致（`10_详细分析` 为脚本自动树版本、`06_品牌切片` 列更全，属通用模板与精编版的预期差异）。
